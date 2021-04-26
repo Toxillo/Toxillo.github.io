@@ -1,5 +1,5 @@
 const socket = io('https://safe-beyond-79826.herokuapp.com/');
-//const socket = io('ws://localhost:8080')
+//	const socket = io('ws://localhost:8080')
 
 var firebaseConfig = {
     apiKey: "AIzaSyBXHPCQrhyYFaGRzswjmFtiVHZGbCROu3w",
@@ -48,16 +48,6 @@ function resetBoard() {
 		board: board,
 	})
 	window.location.reload()
-}
-
-function confirm() {
-	document.getElementById("userID").setAttribute("disabled", true)
-	document.getElementById("playerNumber").setAttribute("disabled", true)
-	document.getElementById("confirmbtn").setAttribute("disabled", true)
-	//userID = document.getElementById("userID").value
-	//playerNumber = document.getElementById("playerNumber").value
-	document.getElementById("settings").style.display = "none"
-	document.getElementById("controls").style.display = "inline"
 }
 
 function loadBoard() {
