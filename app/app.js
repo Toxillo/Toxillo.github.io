@@ -2,21 +2,21 @@ const socket = io('https://safe-beyond-79826.herokuapp.com/');
 //	const socket = io('ws://localhost:8080')
 
 var firebaseConfig = {
-    apiKey: "AIzaSyBXHPCQrhyYFaGRzswjmFtiVHZGbCROu3w",
-    authDomain: "luca-bosch.firebaseapp.com",
-    databaseURL: "https://luca-bosch.firebaseio.com",
-    projectId: "luca-bosch",
-    storageBucket: "luca-bosch.appspot.com",
-    messagingSenderId: "892320182978",
-    appId: "1:892320182978:web:c9f4c49e23b9ff07c3015b",
-    measurementId: "G-NN1BG74T8T"
+    apiKey: 'AIzaSyBXHPCQrhyYFaGRzswjmFtiVHZGbCROu3w',
+    authDomain: 'luca-bosch.firebaseapp.com',
+    databaseURL: 'https://luca-bosch.firebaseio.com',
+    projectId: 'luca-bosch',
+    storageBucket: 'luca-bosch.appspot.com',
+    messagingSenderId: '892320182978',
+    appId: '1:892320182978:web:c9f4c49e23b9ff07c3015b',
+    measurementId: 'G-NN1BG74T8T'
 }
 
 firebase.initializeApp(firebaseConfig)
 
 
 var board = new Array(225)
-var bag = ["E_1", "E_1", "E_1", "E_1", "E_1", "E_1", "E_1", "E_1", "E_1", "E_1", "E_1", "E_1", "E_1", "E_1", "E_1", "N_1", "N_1", "N_1", "N_1", "N_1", "N_1", "N_1", "N_1", "N_1", "S_1", "S_1", "S_1", "S_1", "S_1", "S_1", "S_1", "I_1", "I_1", "I_1", "I_1", "I_1", "I_1", "R_1", "R_1", "R_1", "R_1", "R_1", "R_1", "T_1", "T_1", "T_1", "T_1", "T_1", "T_1", "U_1", "U_1", "U_1", "U_1", "U_1", "U_1", "A_1", "A_1", "A_1", "A_1", "A_1", "D_1", "D_1", "D_1", "D_1", "H_2", "H_2", "H_2", "H_2", "M_3", "M_3", "M_3", "M_3", "G_2", "G_2", "G_2", "L_2", "L_2", "L_2", "O_2", "O_2", "O_2", "B_3", "B_3", "C_4", "C_4", "F_4", "F_4", "K_4", "K_4", "W_3", "Z_3", "P_4", "J_6", "V_6", "X_8", "Q_10", "Y_10"]
+var bag = ['E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'I_1', 'I_1', 'I_1', 'I_1', 'I_1', 'I_1', 'R_1', 'R_1', 'R_1', 'R_1', 'R_1', 'R_1', 'T_1', 'T_1', 'T_1', 'T_1', 'T_1', 'T_1', 'U_1', 'U_1', 'U_1', 'U_1', 'U_1', 'U_1', 'A_1', 'A_1', 'A_1', 'A_1', 'A_1', 'D_1', 'D_1', 'D_1', 'D_1', 'H_2', 'H_2', 'H_2', 'H_2', 'M_3', 'M_3', 'M_3', 'M_3', 'G_2', 'G_2', 'G_2', 'L_2', 'L_2', 'L_2', 'O_2', 'O_2', 'O_2', 'B_3', 'B_3', 'C_4', 'C_4', 'F_4', 'F_4', 'K_4', 'K_4', 'W_3', 'Z_3', 'P_4', 'J_6', 'V_6', 'X_8', 'Q_10', 'Y_10']
 
 var draggedOrigin, row, column, userID
 var changedFields = []
@@ -24,10 +24,22 @@ var toBeRemoved = []
 var firstMove = true
 var rerollOn = false
 var idIndex = 300
-var currentTurn = "a"
+var currentTurn = 'a'
 
 refresh()
 draw(8)
+
+socket.on('newUser', (name) => {
+	player = document.createElement('li');
+	player.innerHTML = name;
+	document.getElementsByClassName('players').appendChild(player);
+});
+
+function appendToList(name) {
+	player = document.createElement('li');
+	player.innerHTML = name;
+	document.getElementById('playerList').appendChild(player);
+}
 
 socket.on('doneServer', (data) => {
 	console.log('client: done event received')
@@ -35,16 +47,23 @@ socket.on('doneServer', (data) => {
 	refresh();
 });
 
-socket.on('id', (data) => {
+socket.on('start', (data) => {
 	userID = data['playerCount'];
 	currentTurn = data['turn'];
 	console.log('received userID and currentTurn: ' + userID + ' ' + currentTurn);
 });
 
+
+function join() {
+	playerName = document.getElementById('name').value;
+	appendToList(playerName);
+	socket.emit('joined', playerName);
+}
+
 function resetBoard() {
 	board = new Array(225)
 	loadBoard()
-	firebase.database().ref("/").update({
+	firebase.database().ref('/').update({
 		board: board,
 	})
 	window.location.reload()
@@ -53,16 +72,16 @@ function resetBoard() {
 function loadBoard() {
 	for (let i = 0; i < board.length; i++) {
 		if (board[i] != null) {
-			var letter = document.createElement("td")
-			var value = document.createElement("sub")
-			letter.setAttribute("id", idIndex + 1000)
+			var letter = document.createElement('td')
+			var value = document.createElement('sub')
+			letter.setAttribute('id', idIndex + 1000)
 			idIndex++
-			letter.setAttribute("class", "letter")
-			letter.classList.add("setInStone")
-			value.innerHTML = "47"
+			letter.setAttribute('class', 'letter')
+			letter.classList.add('setInStone')
+			value.innerHTML = '47'
 			letter.appendChild(value)
 			letter.innerHTML = board[i]
-			document.getElementById(i).innerHTML = ""
+			document.getElementById(i).innerHTML = ''
 			document.getElementById(i).appendChild(letter)
 			firstMove = false
 		}
@@ -72,30 +91,30 @@ function loadBoard() {
 function replace() {
 	console.log(rerollOn)
 	if (!rerollOn) {
-		document.getElementById("donebtn").setAttribute("onclick", "donereroll()")
-		document.getElementById("donebtn").disabled = false
-		document.getElementById("rerollbtn").style.background = "red"
-		var letters = document.getElementsByClassName("letter")
+		document.getElementById('donebtn').setAttribute('onclick', 'donereroll()')
+		document.getElementById('donebtn').disabled = false
+		document.getElementById('rerollbtn').style.background = 'red'
+		var letters = document.getElementsByClassName('letter')
 
 		for (item of letters) {
-			if (!item.classList.contains("setInStone")) {
-				item.setAttribute("onclick", "turnRed(event)")
+			if (!item.classList.contains('setInStone')) {
+				item.setAttribute('onclick', 'turnRed(event)')
 			}
 		}
 
 		rerollOn = true
 	} else {
-		document.getElementById("donebtn").setAttribute("onclick", "done()")
-		document.getElementById("donebtn").disabled = true
-		document.getElementById("rerollbtn").style.background = "#054d05"
-		var letters = document.getElementsByClassName("letter")
+		document.getElementById('donebtn').setAttribute('onclick', 'done()')
+		document.getElementById('donebtn').disabled = true
+		document.getElementById('rerollbtn').style.background = '#054d05'
+		var letters = document.getElementsByClassName('letter')
 
 		for (item of letters) {
-			if (!item.classList.contains("setInStone")) {
-				item.setAttribute("onclick", "returnLetter(event)")
+			if (!item.classList.contains('setInStone')) {
+				item.setAttribute('onclick', 'returnLetter(event)')
 			}
-			if (item.classList.contains("selected")) {
-				item.classList.remove("selected")
+			if (item.classList.contains('selected')) {
+				item.classList.remove('selected')
 			}
 		}
 
@@ -104,11 +123,11 @@ function replace() {
 }
 
 function turnRed(e) {
-	if (!e.target.classList.contains("selected")) {
-		e.target.classList.add("selected")
+	if (!e.target.classList.contains('selected')) {
+		e.target.classList.add('selected')
 		toBeRemoved.push(e.target.id)
 	} else {
-		e.target.classList.remove("selected")
+		e.target.classList.remove('selected')
 		toBeRemoved = toBeRemoved.filter(item => item !== e.target.id)
 	}
 }
@@ -119,14 +138,14 @@ function donereroll() {
 			firstMove = false
 		}
 
-		document.getElementById("rerollbtn").style.background = "#054d05"
-		var letters = document.getElementsByClassName("selected")
+		document.getElementById('rerollbtn').style.background = '#054d05'
+		var letters = document.getElementsByClassName('selected')
 		var lettersputback = []
 
 		for (let i = letters.length - 1; i >= 0; i--) {
 			console.log(letters.item(i).innerHTML)
-			lettersputback.push(letters.item(i).innerHTML.replace("<sub>", "_").replace("</sub>", ""))
-			document.getElementById("playableL").removeChild(letters.item(i))
+			lettersputback.push(letters.item(i).innerHTML.replace('<sub>', '_').replace('</sub>', ''))
+			document.getElementById('playableL').removeChild(letters.item(i))
 			draw(1)
 		}
 
@@ -134,41 +153,41 @@ function donereroll() {
 			bag.push(lettersputback[i])
 		}
 
-		document.getElementById("donebtn").setAttribute("onclick", "done()")
-		document.getElementById("donebtn").disabled = true
-		document.getElementById("rerollbtn").style.background = "#054d05"
-		var letters = document.getElementsByClassName("letter")
+		document.getElementById('donebtn').setAttribute('onclick', 'done()')
+		document.getElementById('donebtn').disabled = true
+		document.getElementById('rerollbtn').style.background = '#054d05'
+		var letters = document.getElementsByClassName('letter')
 		for (item of letters) {
-			if (!item.classList.contains("setInStone")) {
-				item.setAttribute("onclick", "returnLetter(event)")
+			if (!item.classList.contains('setInStone')) {
+				item.setAttribute('onclick', 'returnLetter(event)')
 			}
-			if (item.classList.contains("selected")) {
-				item.classList.remove("selected")
+			if (item.classList.contains('selected')) {
+				item.classList.remove('selected')
 			}
 		}
 
 		rerollOn = false
 
 		if (userID == currentTurn) {
-			firebase.database().ref("/").update({
+			firebase.database().ref('/').update({
 				turn: 1,
 			})
 		} else {
 			userIDinc = userID
 			userIDinc++
-			firebase.database().ref("/").update({
+			firebase.database().ref('/').update({
 				turn: parseInt(userIDinc),
 			})
 		}
 	} else {
-		console.log(userID)
-		console.log("It's not your turn")
+		console.log(userID);
+		console.log('It\'s not your turn');
 	}
 }
 
 function refresh() {
 	firebase.database().ref('board').once('value').then(function (snapshot2) {
-		console.log("received board")
+		console.log('received board')
 		board = new Array(225).fill(null)
 
 		for (item in snapshot2.val()) {
@@ -185,14 +204,14 @@ function refresh() {
 function draw(x) {
 	for (let i = 0; i < x; i++) {
 		if (bag.length > 0) {
-			var letter = document.createElement("td")
-			var value = document.createElement("sub")
-			letter.setAttribute("id", idIndex)
+			var letter = document.createElement('td')
+			var value = document.createElement('sub')
+			letter.setAttribute('id', idIndex)
 			idIndex++
-			letter.setAttribute("class", "letter")
-			letter.setAttribute("draggable", "true")
-			letter.setAttribute("ondragstart", "drag(event)")
-			letter.setAttribute("onclick", "returnLetter(event)")
+			letter.setAttribute('class', 'letter')
+			letter.setAttribute('draggable', 'true')
+			letter.setAttribute('ondragstart', 'drag(event)')
+			letter.setAttribute('onclick', 'returnLetter(event)')
 			var index = Math.floor(Math.random() * bag.length)
 			var item = bag[index]
 
@@ -200,14 +219,14 @@ function draw(x) {
 				bag.splice(index, 1)
 			}
 
-			letter.innerHTML = item.split("_")[0]
-			value.innerHTML = item.split("_")[1]
+			letter.innerHTML = item.split('_')[0]
+			value.innerHTML = item.split('_')[1]
 
 			letter.appendChild(value)
-			document.getElementById("playableL").appendChild(letter)
+			document.getElementById('playableL').appendChild(letter)
 		}
 	}
-	firebase.database().ref("/").update({
+	firebase.database().ref('/').update({
 		bag: bag,
 	})
 }
@@ -217,29 +236,29 @@ function allowDrop(e) {
 }
 
 function drag(e) {
-	e.dataTransfer.setData("text", e.target.id)
+	e.dataTransfer.setData('text', e.target.id)
 	draggedOrigin = e.target.parentElement
 }
 
 function drop(e) {
 	e.preventDefault()
 	changedFields = changedFields.filter(item => item !== parseInt(draggedOrigin.id))
-	draggedOrigin.setAttribute("ondragover", "allowDrop(event)")
-	var data = e.dataTransfer.getData("text")
+	draggedOrigin.setAttribute('ondragover', 'allowDrop(event)')
+	var data = e.dataTransfer.getData('text')
 
 	if (e.target.id != data) {
 		e.target.appendChild(document.getElementById(data))
 		changedFields.push(parseInt(e.target.id))
-		e.target.ondragover = ""
+		e.target.ondragover = ''
 	}
 
 	checkvalid()
 }
 
 function returnLetter(e) {
-	e.target.parentElement.setAttribute("ondragover", "allowDrop(event)")
+	e.target.parentElement.setAttribute('ondragover', 'allowDrop(event)')
 	changedFields = changedFields.filter(item => item !== parseInt(e.target.parentElement.id))
-	document.getElementById("playableL").appendChild(document.getElementById(e.target.id))
+	document.getElementById('playableL').appendChild(document.getElementById(e.target.id))
 	checkvalid()
 }
 
@@ -255,11 +274,11 @@ function done() {
 
 			cont = true
 			i = 15
-			word = ""
+			word = ''
 
 			while (cont) {
 				if (changedFields.includes(wordStartIndexV + i)) {
-					word += document.getElementById(wordStartIndexV + i).childNodes[0].innerHTML.replace(/(\r\n|\n|\r)/gm, "").replace(/\s/g, "").substr(0, 1)
+					word += document.getElementById(wordStartIndexV + i).childNodes[0].innerHTML.replace(/(\r\n|\n|\r)/gm, '').replace(/\s/g, '').substr(0, 1)
 				} else if (board[wordStartIndexV + i] != null) {
 					word += board[wordStartIndexV + i]
 				} else {
@@ -279,11 +298,11 @@ function done() {
 
 		var cont = true
 		var i = 1
-		var word = ""
+		var word = ''
 
 		while (cont) {
 			if (changedFields.includes(wordStartIndexH + i)) {
-				word += document.getElementById(wordStartIndexH + i).childNodes[0].innerHTML.replace(/(\r\n|\n|\r)/gm, "").replace(/\s/g, "").substr(0, 1)
+				word += document.getElementById(wordStartIndexH + i).childNodes[0].innerHTML.replace(/(\r\n|\n|\r)/gm, '').replace(/\s/g, '').substr(0, 1)
 			} else if (board[wordStartIndexH + i] != null) {
 				word += board[wordStartIndexH + i]
 			} else {
@@ -305,11 +324,11 @@ function done() {
 
 			cont = true
 			i = 1
-			word = ""
+			word = ''
 
 			while (cont) {
 				if (changedFields.includes(wordStartIndexH + i)) {
-					word += document.getElementById(wordStartIndexH + i).childNodes[0].innerHTML.replace(/(\r\n|\n|\r)/gm, "").replace(/\s/g, "").substr(0, 1)
+					word += document.getElementById(wordStartIndexH + i).childNodes[0].innerHTML.replace(/(\r\n|\n|\r)/gm, '').replace(/\s/g, '').substr(0, 1)
 				} else if (board[wordStartIndexH + i] != null) {
 					word += board[wordStartIndexH + i]
 				} else {
@@ -330,11 +349,11 @@ function done() {
 
 		cont = true
 		i = 15
-		word = ""
+		word = ''
 
 		while (cont) {
 			if (changedFields.includes(wordStartIndexV + i)) {
-				word += document.getElementById(wordStartIndexV + i).childNodes[0].innerHTML.replace(/(\r\n|\n|\r)/gm, "").replace(/\s/g, "").substr(0, 1)
+				word += document.getElementById(wordStartIndexV + i).childNodes[0].innerHTML.replace(/(\r\n|\n|\r)/gm, '').replace(/\s/g, '').substr(0, 1)
 			} else if (board[wordStartIndexV + i] != null) {
 				word += board[wordStartIndexV + i]
 			} else {
@@ -353,12 +372,12 @@ function done() {
 
 		if (!dictionary.includes(item) && item.length > 1) {
 			validwords = false
-			console.log('"' + item + '"' + " invalid")
+			console.log('"' + item + '"' + ' invalid');
 		}
 
 		if (firstMove && changedFields.length == 1 && !dictionary.includes(item)) {
-			validwords = false
-			console.log('"' + item + '"' + " invalid")
+			validwords = false;
+			console.log('"' + item + '"' + ' invalid');
 		}
 	}
 
@@ -369,26 +388,26 @@ function done() {
 			}
 
 			for (item of changedFields) {
-				document.getElementById(item).childNodes[0].setAttribute("draggable", "false")
-				document.getElementById(item).childNodes[0].setAttribute("onclick", "")
-				document.getElementById(item).childNodes[0].classList.add("setInStone")
-				document.getElementById(item).childNodes[0].childNodes[1].setAttribute("onclick", "")
-				board[item] = document.getElementById(item).childNodes[0].innerHTML.replace(/(\r\n|\n|\r)/gm, "").replace(/\s/g, "").substr(0, 1)
+				document.getElementById(item).childNodes[0].setAttribute('draggable', 'false')
+				document.getElementById(item).childNodes[0].setAttribute('onclick', '')
+				document.getElementById(item).childNodes[0].classList.add('setInStone')
+				document.getElementById(item).childNodes[0].childNodes[1].setAttribute('onclick', '')
+				board[item] = document.getElementById(item).childNodes[0].innerHTML.replace(/(\r\n|\n|\r)/gm, '').replace(/\s/g, '').substr(0, 1)
 			}
 
 			draw(changedFields.length)
 			changedFields = []
 			checkvalid()
 			console.log(board)
-			firebase.database().ref("/").update({
+			firebase.database().ref('/').update({
 				board: board,
 			})
-			console.log("sent board")
+			console.log('sent board')
 			socket.emit('done');
 		} else {
 			console.log(userID)
 			console.log(currentTurn)
-			console.log("It's not your turn")
+			console.log('It\'s not your turn')
 		}
 	}
 }
@@ -399,7 +418,7 @@ function checkvalid() {
 	column = true
 
 	changedFields.sort((a, b) => a - b)
-	document.getElementById("donebtn").disabled = true
+	document.getElementById('donebtn').disabled = true
 	if (changedFields.length != 0) {
 
 		var numberRow = Math.floor(changedFields[0] / 15)
@@ -426,12 +445,12 @@ function checkvalid() {
 				}
 
 				if (adjacent || changedFields.length == 1) {
-					document.getElementById("donebtn").disabled = false
+					document.getElementById('donebtn').disabled = false
 				}
 			} else {
 				if (changedFields.length == 1) {
 					if (board[changedFields[0] - 1] != null || board[changedFields[0] + 1] != null || board[changedFields[0] - 15] != null || board[changedFields[0] + 15] != null) {
-						document.getElementById("donebtn").disabled = false
+						document.getElementById('donebtn').disabled = false
 					}
 				} else {
 					var connected = false
@@ -452,7 +471,7 @@ function checkvalid() {
 						}
 
 					} else {
-						alert("something went wrong")
+						alert('something went wrong')
 					}
 
 					for (item of changedFields) {
@@ -462,7 +481,7 @@ function checkvalid() {
 					}
 
 					if (adjacent && connected) {
-						document.getElementById("donebtn").disabled = false
+						document.getElementById('donebtn').disabled = false
 					}
 				}
 			}
