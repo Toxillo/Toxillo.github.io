@@ -7,19 +7,23 @@ const io = require('socket.io')(http, {
 var turn = 0;
 var playerCount = 0;
 var gameInProg = false;
+var players = new Map();
 
 io.on('connection', (socket) => {
 	console.log('player connected');
+    let transitString = JSON.stringify(Array.from(players));
+
+    io.to(socket.id).emit('players', transitString);
 
     socket.on('joined', (name) => {
         playerCount += 1;
-        io.emit('newUser', name); 
+        io.emit('newUser', name);
+        players.set(socket.id, name);
     });
-
-
 
     socket.on('start', () => {
         io.emit('info', {playerCount: playerCount, turn: turn + 1});
+        console.log(players);
     })
 
     socket.on('done', (message) => {
@@ -32,6 +36,7 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
     	playerCount -= 1;
+        players.delete(socket.id);
     	console.log('player disconnected')
     })
 
@@ -39,3 +44,4 @@ io.on('connection', (socket) => {
 
 
 http.listen(process.env.PORT || 8080);
+//
