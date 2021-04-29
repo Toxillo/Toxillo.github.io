@@ -39,5 +39,3 @@ io.on('connection', (socket) => {
 
 
 http.listen(process.env.PORT || 8080);
-
-//process.env.PORT || 
