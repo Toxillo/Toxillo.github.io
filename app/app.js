@@ -1,22 +1,8 @@
-const socket = io('https://scrabblenode.herokuapp.com/');
-//const socket = io('ws://localhost:8080')
+//const socket = io('https://scrabblenode.herokuapp.com/');
+const socket = io('ws://localhost:8080');
 
-var firebaseConfig = {
-	apiKey: 'AIzaSyBXHPCQrhyYFaGRzswjmFtiVHZGbCROu3w',
-	authDomain: 'luca-bosch.firebaseapp.com',
-	databaseURL: 'https://luca-bosch.firebaseio.com',
-	projectId: 'luca-bosch',
-	storageBucket: 'luca-bosch.appspot.com',
-	messagingSenderId: '892320182978',
-	appId: '1:892320182978:web:c9f4c49e23b9ff07c3015b',
-	measurementId: 'G-NN1BG74T8T'
-}
-
-firebase.initializeApp(firebaseConfig)
-
-
-var board = new Array(225)
-var bag = ['E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'I_1', 'I_1', 'I_1', 'I_1', 'I_1', 'I_1', 'R_1', 'R_1', 'R_1', 'R_1', 'R_1', 'R_1', 'T_1', 'T_1', 'T_1', 'T_1', 'T_1', 'T_1', 'U_1', 'U_1', 'U_1', 'U_1', 'U_1', 'U_1', 'A_1', 'A_1', 'A_1', 'A_1', 'A_1', 'D_1', 'D_1', 'D_1', 'D_1', 'H_2', 'H_2', 'H_2', 'H_2', 'M_3', 'M_3', 'M_3', 'M_3', 'G_2', 'G_2', 'G_2', 'L_2', 'L_2', 'L_2', 'O_2', 'O_2', 'O_2', 'B_3', 'B_3', 'C_4', 'C_4', 'F_4', 'F_4', 'K_4', 'K_4', 'W_3', 'Z_3', 'P_4', 'J_6', 'V_6', 'X_8', 'Q_10', 'Y_10']
+var board = new Array(225);
+var bag = ['E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'I_1', 'I_1', 'I_1', 'I_1', 'I_1', 'I_1', 'R_1', 'R_1', 'R_1', 'R_1', 'R_1', 'R_1', 'T_1', 'T_1', 'T_1', 'T_1', 'T_1', 'T_1', 'U_1', 'U_1', 'U_1', 'U_1', 'U_1', 'U_1', 'A_1', 'A_1', 'A_1', 'A_1', 'A_1', 'D_1', 'D_1', 'D_1', 'D_1', 'H_2', 'H_2', 'H_2', 'H_2', 'M_3', 'M_3', 'M_3', 'M_3', 'G_2', 'G_2', 'G_2', 'L_2', 'L_2', 'L_2', 'O_2', 'O_2', 'O_2', 'B_3', 'B_3', 'C_4', 'C_4', 'F_4', 'F_4', 'K_4', 'K_4', 'W_3', 'Z_3', 'P_4', 'J_6', 'V_6', 'X_8', 'Q_10', 'Y_10'];
 
 var draggedOrigin, row, column, userID;
 var changedFields = [];
@@ -24,38 +10,36 @@ var toBeRemoved = [];
 var firstMove = true;
 var rerollOn = false;
 var idIndex = 300;
-var currentTurn = 'a';
+var currentTurn = 0;
+playerCount = 0;
 
-refresh();
 draw(8);
 
 socket.on('players', (players) => {
-    var tempMap = new Map(JSON.parse(players));
-	console.log(tempMap.size);
+	var tempMap = new Map(JSON.parse(players));
 	if (tempMap.size > 0) {
 		for (var [key, value] of tempMap) {
+			playerCount += 1
 			appendToList(value);
 		}
 	}
+	userID = playerCount;
 });
 
 socket.on('newUser', (name) => {
 	appendToList(name);
 });
 
+socket.on('startServer', () => {
+	document.getElementsByClassName('lobby-container')[0].style.display = 'none';
+	document.getElementsByClassName('controls-container')[0].style.display = 'block';
+})
 
 socket.on('doneServer', (data) => {
-	console.log('client: done event received')
-	currentTurn = data;
-	refresh();
-});
-
-socket.on('info', (data) => {
-	userID = data['playerCount'];
 	currentTurn = data['turn'];
-	for (const player of data[players].keys) {
-		appendToList(player);
-	}
+	board = data['board'];
+	bag = data['bag'];
+	loadBoard();
 });
 
 function appendToList(name) {
@@ -65,34 +49,31 @@ function appendToList(name) {
 }
 
 function join() {
+	document.getElementById('join-button').disabled = true;
 	playerName = document.getElementById('name').value;
 	socket.emit('joined', playerName);
 }
 
-function resetBoard() {
-	board = new Array(225)
-	loadBoard()
-	firebase.database().ref('/').update({
-		board: board,
-	})
-	window.location.reload()
+function start() {
+	console.log('Sending start event');
+	socket.emit('start', 'test');
 }
 
 function loadBoard() {
 	for (let i = 0; i < board.length; i++) {
 		if (board[i] != null) {
-			var letter = document.createElement('td')
-			var value = document.createElement('sub')
-			letter.setAttribute('id', idIndex + 1000)
-			idIndex++
-			letter.setAttribute('class', 'letter')
-			letter.classList.add('setInStone')
-			value.innerHTML = '47'
-			letter.appendChild(value)
-			letter.innerHTML = board[i]
-			document.getElementById(i).innerHTML = ''
-			document.getElementById(i).appendChild(letter)
-			firstMove = false
+			var letter = document.createElement('td');
+			var value = document.createElement('sub');
+			letter.setAttribute('id', idIndex + 1000);
+			idIndex++;
+			letter.setAttribute('class', 'letter');
+			letter.classList.add('setInStone');
+			value.innerHTML = '47';
+			letter.appendChild(value);
+			letter.innerHTML = board[i];
+			document.getElementById(i).innerHTML = '';
+			document.getElementById(i).appendChild(letter);
+			firstMove = false;
 		}
 	}
 }
@@ -174,36 +155,10 @@ function donereroll() {
 		}
 
 		rerollOn = false
-
-		if (userID == currentTurn) {
-			firebase.database().ref('/').update({
-				turn: 1,
-			})
-		} else {
-			userIDinc = userID
-			userIDinc++
-			firebase.database().ref('/').update({
-				turn: parseInt(userIDinc),
-			})
-		}
+		socket.emit('done', {board: board, bag: bag});
 	} else {
 		console.log('It\'s not your turn');
 	}
-}
-
-function refresh() {
-	firebase.database().ref('board').once('value').then(function (snapshot2) {
-		board = new Array(225).fill(null)
-
-		for (item in snapshot2.val()) {
-			board[item] = snapshot2.val()[item]
-		}
-		loadBoard()
-	})
-	firebase.database().ref('bag').once('value').then(function (snapshot3) {
-		bag = snapshot3.val()
-	})
-
 }
 
 function draw(x) {
@@ -231,9 +186,6 @@ function draw(x) {
 			document.getElementById('playableL').appendChild(letter)
 		}
 	}
-	firebase.database().ref('/').update({
-		bag: bag,
-	})
 }
 
 function allowDrop(e) {
@@ -269,9 +221,85 @@ function returnLetter(e) {
 
 function done() {
 	var allwords = []
-	if (row) {
-		for (var j = 0; j < changedFields.length; j++) {
-			var wordStartIndexV = changedFields[j] - 15
+	if (userID == currentTurn) {
+		if (row) {
+			for (var j = 0; j < changedFields.length; j++) {
+				var wordStartIndexV = changedFields[j] - 15
+
+				while (changedFields.includes(wordStartIndexV) || board[wordStartIndexV] != null) {
+					wordStartIndexV -= 15
+				}
+
+				cont = true
+				i = 15
+				word = ''
+
+				while (cont) {
+					if (changedFields.includes(wordStartIndexV + i)) {
+						word += document.getElementById(wordStartIndexV + i).childNodes[0].innerHTML.replace(/(\r\n|\n|\r)/gm, '').replace(/\s/g, '').substr(0, 1)
+					} else if (board[wordStartIndexV + i] != null) {
+						word += board[wordStartIndexV + i]
+					} else {
+						cont = false
+					}
+
+					i += 15
+				}
+
+				allwords.push(word)
+			}
+			var wordStartIndexH = changedFields[0] - 1
+
+			while (changedFields.includes(wordStartIndexH) || board[wordStartIndexH] != null) {
+				wordStartIndexH--
+			}
+
+			var cont = true
+			var i = 1
+			var word = ''
+
+			while (cont) {
+				if (changedFields.includes(wordStartIndexH + i)) {
+					word += document.getElementById(wordStartIndexH + i).childNodes[0].innerHTML.replace(/(\r\n|\n|\r)/gm, '').replace(/\s/g, '').substr(0, 1)
+				} else if (board[wordStartIndexH + i] != null) {
+					word += board[wordStartIndexH + i]
+				} else {
+					cont = false
+				}
+
+				i++
+			}
+
+			allwords.push(word)
+
+		} else if (column) {
+			for (var j = 0; j < changedFields.length; j++) {
+				var wordStartIndexH = changedFields[j] - 1
+
+				while (changedFields.includes(wordStartIndexH) || board[wordStartIndexH] != null) {
+					wordStartIndexH--
+				}
+
+				cont = true
+				i = 1
+				word = ''
+
+				while (cont) {
+					if (changedFields.includes(wordStartIndexH + i)) {
+						word += document.getElementById(wordStartIndexH + i).childNodes[0].innerHTML.replace(/(\r\n|\n|\r)/gm, '').replace(/\s/g, '').substr(0, 1)
+					} else if (board[wordStartIndexH + i] != null) {
+						word += board[wordStartIndexH + i]
+					} else {
+						cont = false
+					}
+
+					i++
+				}
+
+				allwords.push(word)
+			}
+
+			var wordStartIndexV = changedFields[0] - 15
 
 			while (changedFields.includes(wordStartIndexV) || board[wordStartIndexV] != null) {
 				wordStartIndexV -= 15
@@ -292,102 +320,26 @@ function done() {
 
 				i += 15
 			}
-
-			allwords.push(word)
-		}
-		var wordStartIndexH = changedFields[0] - 1
-
-		while (changedFields.includes(wordStartIndexH) || board[wordStartIndexH] != null) {
-			wordStartIndexH--
+			allwords.push(word);
 		}
 
-		var cont = true
-		var i = 1
-		var word = ''
+		validwords = true;
 
-		while (cont) {
-			if (changedFields.includes(wordStartIndexH + i)) {
-				word += document.getElementById(wordStartIndexH + i).childNodes[0].innerHTML.replace(/(\r\n|\n|\r)/gm, '').replace(/\s/g, '').substr(0, 1)
-			} else if (board[wordStartIndexH + i] != null) {
-				word += board[wordStartIndexH + i]
-			} else {
-				cont = false
+		for (item of allwords) {
+			console.log(item);
+
+			if (item.length > 1 && !dictionary.includes(item)) {
+				validwords = false;
+				console.log('"' + item + '"' + ' invalid');
 			}
 
-			i++
-		}
-
-		allwords.push(word)
-
-	} else if (column) {
-		for (var j = 0; j < changedFields.length; j++) {
-			var wordStartIndexH = changedFields[j] - 1
-
-			while (changedFields.includes(wordStartIndexH) || board[wordStartIndexH] != null) {
-				wordStartIndexH--
+			if (firstMove && changedFields.length == 1) {
+				validwords = false;
+				console.log('"' + item + '"' + ' invalid');
 			}
-
-			cont = true
-			i = 1
-			word = ''
-
-			while (cont) {
-				if (changedFields.includes(wordStartIndexH + i)) {
-					word += document.getElementById(wordStartIndexH + i).childNodes[0].innerHTML.replace(/(\r\n|\n|\r)/gm, '').replace(/\s/g, '').substr(0, 1)
-				} else if (board[wordStartIndexH + i] != null) {
-					word += board[wordStartIndexH + i]
-				} else {
-					cont = false
-				}
-
-				i++
-			}
-
-			allwords.push(word)
 		}
 
-		var wordStartIndexV = changedFields[0] - 15
-
-		while (changedFields.includes(wordStartIndexV) || board[wordStartIndexV] != null) {
-			wordStartIndexV -= 15
-		}
-
-		cont = true
-		i = 15
-		word = ''
-
-		while (cont) {
-			if (changedFields.includes(wordStartIndexV + i)) {
-				word += document.getElementById(wordStartIndexV + i).childNodes[0].innerHTML.replace(/(\r\n|\n|\r)/gm, '').replace(/\s/g, '').substr(0, 1)
-			} else if (board[wordStartIndexV + i] != null) {
-				word += board[wordStartIndexV + i]
-			} else {
-				cont = false
-			}
-
-			i += 15
-		}
-		allwords.push(word)
-	}
-
-	validwords = true
-
-	for (item of allwords) {
-		console.log(item)
-
-		if (!dictionary.includes(item) && item.length > 1) {
-			validwords = false
-			console.log('"' + item + '"' + ' invalid');
-		}
-
-		if (firstMove && changedFields.length == 1 && !dictionary.includes(item)) {
-			validwords = false;
-			console.log('"' + item + '"' + ' invalid');
-		}
-	}
-
-	if (validwords) {
-		if (currentTurn == userID) {
+		if (validwords) {
 			if (firstMove) {
 				firstMove = false
 			}
@@ -403,14 +355,11 @@ function done() {
 			draw(changedFields.length)
 			changedFields = []
 			checkvalid()
-			firebase.database().ref('/').update({
-				board: board,
-			})
+			socket.emit('done', {board: board, bag: bag});
 			console.log('sent board')
-			socket.emit('done');
-		} else {
-			console.log('It\'s not your turn')
 		}
+	} else {
+		console.log('It\'s not your turn');
 	}
 }
 

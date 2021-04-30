@@ -7,7 +7,6 @@
 body {
     margin: 0;
     background-color: #242424;
-    position: relative;
 }
 
 td {
@@ -27,20 +26,21 @@ sub {
 
 
 .container {
-  display: grid;
-  grid-template-columns: 25% 60% 10%;
-  grid-template-rows: 10% 50% 40%;
-  grid-gap: 10px;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 65% 1fr;
+    grid-template-rows: 10% 1fr;
+    grid-gap: 10px;
 }
 
 .lobby-container {
     color: white;
     margin: 0 auto;
+    margin-left: 45px; 
     position: relative;
     display: flex;
     justify-content: center;
-    grid-row: 2/3;
-    /*background: #333;*/
+    grid-row: 2 / 3;
 }
 
 .heading {
@@ -54,13 +54,13 @@ sub {
     color: white;
     font-size: 2rem;
     position: absolute;
-    top: 20%;
+    top: 10%;
 }
 
 .players-container {
     position: absolute;
-    top: 30%;
-    height: 300px;
+    top: 15%;
+    height: 70%;
     width: 300px;
     overflow-y: auto;
 }
@@ -70,13 +70,12 @@ sub {
 }
 
 .name-input {
-    position: relative;
+    position: absolute;
+    top: 70%;
     color: white;
     display: flex;
-    grid-row: 3 / 4;
     margin: 0 auto;
     height: 4rem;
-    line-height: 2rem;
     align-items: center;
 }
 
@@ -84,27 +83,62 @@ sub {
     height: 2.5rem;
     width: 10rem;
     font-size: 1.5rem;
+    border: none;
+    border-radius: 5px;
 }
 
 .name-input #name:focus {
     outline: none;
 }
 
-.name-input .button {
-    margin-left: 24px;
+.name-input #join-button {
+    margin-left: 12px;
     vertical-align: middle;
 }
 
-.board-container {
+.name-input #start-button {
+    position: absolute;
+    width: 100%;
+    top: 100%;
+}
+
+.controls-container {
+    margin: 0 auto;
+    margin-left: 45px; 
+    position: relative;
     display: flex;
+    justify-content: center;
+    grid-row: 2 / 3;
+}
+
+.controls {
+    position: absolute;
+    top: 70%;
+    display: flex;
+    margin: 0 auto;
+    height: 4rem;
+    align-items: center;
+}
+
+.controls #donebtn {
+    position: absolute;
+    width: 100%;
+    top: 100%;
+}
+
+.board-container {
     position: relative;
     justify-content: center;
     align-items: center;
     top: 30%;
-    /*height: 90vh;*/
     grid-column: 2 / 3
 }
 
+.board {
+    display: flex;
+    justify-content: center;
+    grid-column: 2 / 3;
+}
 
 .letters {
     display: flex;
@@ -113,7 +147,6 @@ sub {
     justify-content: center;
     grid-column: 2 / 3;    
 }
-
 
 .letter {
     background-color: white;

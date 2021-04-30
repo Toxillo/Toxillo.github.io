@@ -26,17 +26,16 @@
 				<ol id="playerList" class="players">
 				</ol>
 			</div>
+			<div class="name-input">
+				<input id="name" type="text" placeholder="Username">
+				<button id="join-button" class="button" onclick="join()">Join</button>
+				<button id="start-button" class="button" onclick="start()">Start Game</button>
+			</div>
 		</div>
-		<div class="name-input">
-			<input id="name" type="text" placeholder="Username">
-			<button class="button" onclick="join()">Join</button>
-		</div>
-		<div class="button-container" style="display: none;">
-			<div id="controls">
-				<button id="donebtn" class="button" disabled="true" onclick="done()">Done</button>
+		<div class="controls-container" style="display: none;">
+			<div class="controls">
 				<button id="rerollbtn" class="button" onclick="replace()">Reroll</button>
-				<button id="rerollbtn" class="button" style="height: 50px; width: 204px;"
-				onclick="resetBoard()">Reset</button>
+				<button id="donebtn" class="button" disabled="true" onclick="done()">Done</button>
 			</div>
 		</div>
 		<div class="letters">
@@ -45,7 +44,7 @@
 				</tr>
 			</table>
 		</div>
-		<div class="board-container">
+		<!-- <div class="board-container"> -->
 			<div class="board">
 				<table>
 					<tr>
@@ -320,9 +319,8 @@
 					</tr>
 				</table>
 			</div>
+			<!-- </div> -->
 		</div>
-		<div></div>
-	</div>
-</body>
+	</body>
 
-</html>
+	</html>
