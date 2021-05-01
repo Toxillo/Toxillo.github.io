@@ -10,7 +10,7 @@ var toBeRemoved = [];
 var firstMove = true;
 var rerollOn = false;
 var idIndex = 300;
-var currentTurn = 0;
+var currentTurn = 1;
 playerCount = 0;
 
 draw(8);
@@ -19,20 +19,23 @@ socket.on('players', (players) => {
 	var tempMap = new Map(JSON.parse(players));
 	if (tempMap.size > 0) {
 		for (var [key, value] of tempMap) {
-			playerCount += 1
 			appendToList(value);
 		}
 	}
-	userID = playerCount;
 });
+
+socket.on('id', (count) => {
+	userID = count;
+	console.log('received id: ' + userID);
+})
 
 socket.on('newUser', (name) => {
 	appendToList(name);
 });
 
-socket.on('startServer', () => {
-	document.getElementsByClassName('lobby-container')[0].style.display = 'none';
-	document.getElementsByClassName('controls-container')[0].style.display = 'block';
+socket.on('startServer', (count) => {
+	Array.from(document.getElementsByClassName('lobby')).forEach(dom => dom.style.display = 'none');
+	document.getElementsByClassName('controls')[0].style.display = 'flex';
 })
 
 socket.on('doneServer', (data) => {
@@ -40,6 +43,7 @@ socket.on('doneServer', (data) => {
 	board = data['board'];
 	bag = data['bag'];
 	loadBoard();
+	console.log('received current turn: ' + currentTurn + 'and I am :' + userID);
 });
 
 function appendToList(name) {

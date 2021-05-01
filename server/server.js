@@ -18,8 +18,9 @@ io.on('connection', (socket) => {
 
     io.to(socket.id).emit('players', transitString);
 
-    playerCount += 1;
     socket.on('joined', (name) => {
+        playerCount += 1;
+        io.to(socket.id).emit('id', playerCount);
         io.emit('newUser', name);
         players.set(socket.id, name);
     });
@@ -32,7 +33,6 @@ io.on('connection', (socket) => {
     socket.on('done', (data) => {
     	console.log('done event received');
     	turn = (turn + 1) % playerCount;
-    	console.log('current turn is now: ' + (turn + 1));
     	console.log('player count: ' + playerCount);
         io.emit('doneServer', {turn: (turn + 1), board: data['board'], bag: data['bag']});
     });

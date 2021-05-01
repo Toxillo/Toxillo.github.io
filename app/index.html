@@ -15,25 +15,23 @@
 
 <body>
 	<div class="container">
-		<div class="lobby-container">
+		<div class="left-container">
 			<div class="heading">
 				SCRABBLE
 			</div>
-			<div class="lobby">
+			<div class="players-heading">
 				Players
 			</div>
 			<div class="players-container">
 				<ol id="playerList" class="players">
 				</ol>
 			</div>
-			<div class="name-input">
+			<div class="name-input lobby">
 				<input id="name" type="text" placeholder="Username">
 				<button id="join-button" class="button" onclick="join()">Join</button>
 				<button id="start-button" class="button" onclick="start()">Start Game</button>
 			</div>
-		</div>
-		<div class="controls-container" style="display: none;">
-			<div class="controls">
+			<div class="controls" style="display: none">
 				<button id="rerollbtn" class="button" onclick="replace()">Reroll</button>
 				<button id="donebtn" class="button" disabled="true" onclick="done()">Done</button>
 			</div>
