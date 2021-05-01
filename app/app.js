@@ -1,8 +1,10 @@
 const socket = io('https://scrabblenode.herokuapp.com/');
 //const socket = io('ws://localhost:8080');
 
+var initBag = ['E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'I_1', 'I_1', 'I_1', 'I_1', 'I_1', 'I_1', 'R_1', 'R_1', 'R_1', 'R_1', 'R_1', 'R_1', 'T_1', 'T_1', 'T_1', 'T_1', 'T_1', 'T_1', 'U_1', 'U_1', 'U_1', 'U_1', 'U_1', 'U_1', 'A_1', 'A_1', 'A_1', 'A_1', 'A_1', 'D_1', 'D_1', 'D_1', 'D_1', 'H_2', 'H_2', 'H_2', 'H_2', 'M_3', 'M_3', 'M_3', 'M_3', 'G_2', 'G_2', 'G_2', 'L_2', 'L_2', 'L_2', 'O_2', 'O_2', 'O_2', 'B_3', 'B_3', 'C_4', 'C_4', 'F_4', 'F_4', 'K_4', 'K_4', 'W_3', 'Z_3', 'P_4', 'J_6', 'V_6', 'X_8', 'Q_10', 'Y_10'];
+
 var board = new Array(225);
-var bag = ['E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'I_1', 'I_1', 'I_1', 'I_1', 'I_1', 'I_1', 'R_1', 'R_1', 'R_1', 'R_1', 'R_1', 'R_1', 'T_1', 'T_1', 'T_1', 'T_1', 'T_1', 'T_1', 'U_1', 'U_1', 'U_1', 'U_1', 'U_1', 'U_1', 'A_1', 'A_1', 'A_1', 'A_1', 'A_1', 'D_1', 'D_1', 'D_1', 'D_1', 'H_2', 'H_2', 'H_2', 'H_2', 'M_3', 'M_3', 'M_3', 'M_3', 'G_2', 'G_2', 'G_2', 'L_2', 'L_2', 'L_2', 'O_2', 'O_2', 'O_2', 'B_3', 'B_3', 'C_4', 'C_4', 'F_4', 'F_4', 'K_4', 'K_4', 'W_3', 'Z_3', 'P_4', 'J_6', 'V_6', 'X_8', 'Q_10', 'Y_10'];
+var bag = initBag;
 
 var draggedOrigin, row, column, userID;
 var changedFields = [];
@@ -38,18 +40,41 @@ socket.on('startServer', (count) => {
 	document.getElementsByClassName('controls')[0].style.display = 'flex';
 })
 
+socket.on('resetServer', () => {
+	removeAllFromList();
+	board = new Array(255);1
+	bag = initBag;
+	document.getElementById('join-button').disabled = false;
+	console.log('reset server');
+})
+
 socket.on('doneServer', (data) => {
 	currentTurn = data['turn'];
 	board = data['board'];
 	bag = data['bag'];
 	loadBoard();
-	console.log('received current turn: ' + currentTurn + 'and I am :' + userID);
+	console.log('received current turn: ' + currentTurn + ' and I am: ' + userID);
 });
 
 function appendToList(name) {
 	player = document.createElement('li');
 	player.innerHTML = name;
+	player.classList.add('player');
 	document.getElementById('playerList').appendChild(player);
+}
+
+function removeFromList(name) {
+	Array.from(document.getElementsByClassName('player')).forEach(player => {
+		if (player.innerHTML == name) {
+			player.remove();
+		}
+	});
+}
+
+function removeAllFromList() {
+	Array.from(document.getElementsByClassName('player')).forEach(player => {
+		player.remove();
+	});
 }
 
 function join() {
@@ -61,6 +86,11 @@ function join() {
 function start() {
 	console.log('Sending start event');
 	socket.emit('start', 'test');
+}
+
+function reset() {
+	console.log('Sending new game event')
+	socket.emit('reset');
 }
 
 function loadBoard() {
