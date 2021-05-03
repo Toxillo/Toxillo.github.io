@@ -26,19 +26,19 @@
 				<ol id="playerList" class="players">
 				</ol>
 			</div>
-			<div class="name-input lobby">
+			<div class="lobby-controls">
 				<input id="name" type="text" placeholder="Username">
+				<input id="lobby-id" type="text" placeholder="Lobby ID">
 				<button id="join-button" class="button" onclick="join()">Join</button>
-				<button id="start-button" class="button" onclick="start()">Start Game</button>
-				<button id="reset-button" class="button" onclick="reset()">New Game</button>
-
+				<button id="start-button" class="button" onclick="start()" style="display: none">Start Game</button>
+				<button id="new-button" class="button" onclick="newGame()">New Game</button>
 			</div>
 			<div class="controls" style="display: none">
 				<button id="rerollbtn" class="button" onclick="replace()">Reroll</button>
 				<button id="donebtn" class="button" disabled="true" onclick="done()">Done</button>
 			</div>
 		</div>
-		<div class="letters">
+		<div class="letters" style="display: none">
 			<table>
 				<tr id="playableL">
 				</tr>

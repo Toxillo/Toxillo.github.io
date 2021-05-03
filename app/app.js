@@ -1,5 +1,5 @@
-const socket = io('https://scrabblenode.herokuapp.com/');
-//const socket = io('ws://localhost:8080');
+//const socket = io('https://scrabblenode.herokuapp.com/');
+const socket = io('ws://localhost:8080');
 
 var initBag = ['E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'I_1', 'I_1', 'I_1', 'I_1', 'I_1', 'I_1', 'R_1', 'R_1', 'R_1', 'R_1', 'R_1', 'R_1', 'T_1', 'T_1', 'T_1', 'T_1', 'T_1', 'T_1', 'U_1', 'U_1', 'U_1', 'U_1', 'U_1', 'U_1', 'A_1', 'A_1', 'A_1', 'A_1', 'A_1', 'D_1', 'D_1', 'D_1', 'D_1', 'H_2', 'H_2', 'H_2', 'H_2', 'M_3', 'M_3', 'M_3', 'M_3', 'G_2', 'G_2', 'G_2', 'L_2', 'L_2', 'L_2', 'O_2', 'O_2', 'O_2', 'B_3', 'B_3', 'C_4', 'C_4', 'F_4', 'F_4', 'K_4', 'K_4', 'W_3', 'Z_3', 'P_4', 'J_6', 'V_6', 'X_8', 'Q_10', 'Y_10'];
 
@@ -13,40 +13,53 @@ var firstMove = true;
 var rerollOn = false;
 var idIndex = 300;
 var currentTurn = 1;
-playerCount = 0;
+var playerCount = 0;
+var lobbyID = '';
+var username = '';
+var host = false;
 
 draw(8);
 
-socket.on('players', (players) => {
+socket.on('info', (players) => {
 	var tempMap = new Map(JSON.parse(players));
+	userID = tempMap.size;
 	if (tempMap.size > 0) {
 		for (var [key, value] of tempMap) {
 			appendToList(value);
 		}
 	}
-});
-
-socket.on('id', (count) => {
-	userID = count;
-	console.log('received id: ' + userID);
 })
 
 socket.on('newUser', (name) => {
+	console.log('received new user event');
 	appendToList(name);
 });
 
-socket.on('startServer', (count) => {
-	Array.from(document.getElementsByClassName('lobby')).forEach(dom => dom.style.display = 'none');
-	document.getElementsByClassName('controls')[0].style.display = 'flex';
+socket.on('success', () => {
+	if (!host) {
+		document.getElementById('join-button').style.display = 'none';
+		document.getElementById('new-button').style.display = 'none';
+		infoText = document.createElement('div');
+		infoText.innerHTML = 'Wait for the host to start the game...';
+		infoText.id = 'lobby-infotext';
+		document.getElementsByClassName('lobby-controls')[0].appendChild(infoText);
+	}
 })
 
-socket.on('resetServer', () => {
-	removeAllFromList();
-	board = new Array(255);1
-	bag = initBag;
-	document.getElementById('join-button').disabled = false;
-	console.log('reset server');
-})
+socket.on('startServer', () => {
+	Array.from(document.getElementsByClassName('lobby-controls'))[0].style.display = 'none';
+	document.getElementsByClassName('controls')[0].style.display = 'flex';
+	document.getElementsByClassName('letters')[0].style.display = 'flex';
+});
+
+socket.on('newServer', () => {
+	host = true;
+	socket.emit('joined', {username, lobbyID});
+});
+
+socket.on('error', (msg) => {
+	console.log(msg);
+});
 
 socket.on('doneServer', (data) => {
 	currentTurn = data['turn'];
@@ -55,6 +68,28 @@ socket.on('doneServer', (data) => {
 	loadBoard();
 	console.log('received current turn: ' + currentTurn + ' and I am: ' + userID);
 });
+
+
+function join() {
+	username = document.getElementById('name').value;
+	lobbyID = document.getElementById('lobby-id').value;
+	socket.emit('joined', {username, lobbyID});
+}
+
+function start() {
+	console.log('Sending start event');
+	socket.emit('start');
+}
+
+function newGame() {
+	console.log('Sending new game event');
+	lobbyID = document.getElementById('lobby-id').value;
+	username = document.getElementById('name').value;
+	document.getElementById('new-button').style.display = 'none';
+	document.getElementById('join-button').style.display = 'none';
+	document.getElementById('start-button').style.display = '';
+	socket.emit('new', lobbyID);
+}
 
 function appendToList(name) {
 	player = document.createElement('li');
@@ -75,22 +110,6 @@ function removeAllFromList() {
 	Array.from(document.getElementsByClassName('player')).forEach(player => {
 		player.remove();
 	});
-}
-
-function join() {
-	document.getElementById('join-button').disabled = true;
-	playerName = document.getElementById('name').value;
-	socket.emit('joined', playerName);
-}
-
-function start() {
-	console.log('Sending start event');
-	socket.emit('start', 'test');
-}
-
-function reset() {
-	console.log('Sending new game event')
-	socket.emit('reset');
 }
 
 function loadBoard() {
@@ -189,7 +208,7 @@ function donereroll() {
 		}
 
 		rerollOn = false
-		socket.emit('done', {board: board, bag: bag});
+		socket.emit('done', {board, bag, lobbyID});
 	} else {
 		console.log('It\'s not your turn');
 	}
@@ -389,7 +408,7 @@ function done() {
 			draw(changedFields.length)
 			changedFields = []
 			checkvalid()
-			socket.emit('done', {board: board, bag: bag});
+			socket.emit('done', {board, bag, lobbyID});
 			console.log('sent board')
 		}
 	} else {
