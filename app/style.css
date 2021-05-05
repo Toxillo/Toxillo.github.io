@@ -7,6 +7,7 @@
 body {
     margin: 0;
     background-color: #242424;
+    color: white;
 }
 
 input {
@@ -46,7 +47,6 @@ sub {
 }
 
 .left-container {
-    color: white;
     margin-left: 45px; 
     position: relative;
     display: flex;
@@ -68,7 +68,6 @@ sub {
 }
 
 .players-heading {
-    color: white;
     font-size: 2rem;
     position: absolute;
     top: 10%;
@@ -136,7 +135,6 @@ input#name {
     width: 91%;
     top: 84%;
     height: 4rem;
-    color: white;
     display: flex;
     margin: 0 auto;
     align-items: center;
@@ -207,7 +205,6 @@ input#name {
 }
 
 .right-container {
-    color: white;
     margin-right: 45px; 
     position: relative;
     display: flex;
@@ -220,10 +217,22 @@ input#name {
 }
 
 .score-heading {
-    color: white;
     font-size: 3rem;
     position: absolute;
     top: 10%;
+}
+
+.definition-heading {
+    font-size: 2rem;
+    position: absolute;
+    top: 20%;
+    left: 6%;
+}
+
+#definition {
+    position: absolute;
+    top: 25%;
+    left: 6%;
 }
 
 .button {
@@ -244,5 +253,4 @@ input#name {
 
 .button:disabled {
     background: #646464;
-    color: white;
 }

@@ -1,132 +1,133 @@
-const socket = io('https://scrabblenode.herokuapp.com/');
-//const socket = io('ws://localhost:8080');
+//TODO Letters can be dropped into existing letters
 
-var initBag = ['E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'I_1', 'I_1', 'I_1', 'I_1', 'I_1', 'I_1', 'R_1', 'R_1', 'R_1', 'R_1', 'R_1', 'R_1', 'T_1', 'T_1', 'T_1', 'T_1', 'T_1', 'T_1', 'U_1', 'U_1', 'U_1', 'U_1', 'U_1', 'U_1', 'A_1', 'A_1', 'A_1', 'A_1', 'A_1', 'D_1', 'D_1', 'D_1', 'D_1', 'H_2', 'H_2', 'H_2', 'H_2', 'M_3', 'M_3', 'M_3', 'M_3', 'G_2', 'G_2', 'G_2', 'L_2', 'L_2', 'L_2', 'O_2', 'O_2', 'O_2', 'B_3', 'B_3', 'C_4', 'C_4', 'F_4', 'F_4', 'K_4', 'K_4', 'W_3', 'Z_3', 'P_4', 'J_6', 'V_6', 'X_8', 'Q_10', 'Y_10'];
+const socket = io('https://scrabblenode.herokuapp.com/')
+//const socket = io('ws://localhost:8080')
 
-var board = new Array(225);
-var bag = initBag;
+var initBag = ['E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'I_1', 'I_1', 'I_1', 'I_1', 'I_1', 'I_1', 'R_1', 'R_1', 'R_1', 'R_1', 'R_1', 'R_1', 'T_1', 'T_1', 'T_1', 'T_1', 'T_1', 'T_1', 'U_1', 'U_1', 'U_1', 'U_1', 'U_1', 'U_1', 'A_1', 'A_1', 'A_1', 'A_1', 'A_1', 'D_1', 'D_1', 'D_1', 'D_1', 'H_2', 'H_2', 'H_2', 'H_2', 'M_3', 'M_3', 'M_3', 'M_3', 'G_2', 'G_2', 'G_2', 'L_2', 'L_2', 'L_2', 'O_2', 'O_2', 'O_2', 'B_3', 'B_3', 'C_4', 'C_4', 'F_4', 'F_4', 'K_4', 'K_4', 'W_3', 'Z_3', 'P_4', 'J_6', 'V_6', 'X_8', 'Q_10', 'Y_10']
 
-var draggedOrigin, row, column, userID;
-var changedFields = [];
-var toBeRemoved = [];
-var firstMove = true;
-var rerollOn = false;
-var idIndex = 300;
-var currentTurn = 1;
-var playerCount = 0;
-var lobbyID = '';
-var username = '';
-var host = false;
+var board = new Array(225)
+var bag = initBag
 
-draw(8);
+var draggedOrigin, row, column, userID
+var changedFields = []
+var toBeRemoved = []
+var firstMove = true
+var rerollOn = false
+var idIndex = 300
+var currentTurn = 1
+var playerCount = 0
+var lobbyID = ''
+var username = ''
+var host = false
+
+draw(8)
 
 socket.on('info', (players) => {
-	var tempMap = new Map(JSON.parse(players));
-	userID = tempMap.size;
+	var tempMap = new Map(JSON.parse(players))
+	userID = tempMap.size
 	if (tempMap.size > 0) {
 		for (var [key, value] of tempMap) {
-			appendToList(value);
+			appendToList(value)
 		}
 	}
 })
 
 socket.on('newUser', (name) => {
-	console.log('received new user event');
-	appendToList(name);
-});
+	console.log('received new user event')
+	appendToList(name)
+})
 
 socket.on('success', () => {
 	if (!host) {
-		document.getElementById('join-button').style.display = 'none';
-		document.getElementById('new-button').style.display = 'none';
-		infoText = document.createElement('div');
-		infoText.innerHTML = 'Wait for the host to start the game...';
-		infoText.id = 'lobby-infotext';
-		document.getElementsByClassName('lobby-controls')[0].appendChild(infoText);
+		document.getElementById('join-button').style.display = 'none'
+		document.getElementById('new-button').style.display = 'none'
+		infoText = document.createElement('div')
+		infoText.innerHTML = 'Wait for the host to start the game...'
+		infoText.id = 'lobby-infotext'
+		document.getElementsByClassName('lobby-controls')[0].appendChild(infoText)
 	}
 })
 
 socket.on('startServer', () => {
-	Array.from(document.getElementsByClassName('lobby-controls'))[0].style.display = 'none';
-	document.getElementsByClassName('controls')[0].style.display = 'flex';
-	document.getElementsByClassName('letters')[0].style.display = 'flex';
-});
+	Array.from(document.getElementsByClassName('lobby-controls'))[0].style.display = 'none'
+	document.getElementsByClassName('controls')[0].style.display = 'flex'
+	document.getElementsByClassName('letters')[0].style.display = 'flex'
+})
 
 socket.on('newServer', () => {
-	host = true;
-	socket.emit('joined', {username, lobbyID});
-});
+	host = true
+	socket.emit('joined', {username, lobbyID})
+})
 
 socket.on('error', (msg) => {
-	console.log(msg);
-});
+	console.log(msg)
+})
 
 socket.on('doneServer', (data) => {
-	currentTurn = data['turn'];
-	board = data['board'];
-	bag = data['bag'];
-	loadBoard();
-	console.log('received current turn: ' + currentTurn + ' and I am: ' + userID);
-});
-
+	currentTurn = data['turn']
+	board = data['board']
+	bag = data['bag']
+	loadBoard()
+	console.log('received current turn: ' + currentTurn + ' and I am: ' + userID)
+})
 
 function join() {
-	username = document.getElementById('name').value;
-	lobbyID = document.getElementById('lobby-id').value;
-	socket.emit('joined', {username, lobbyID});
+	username = document.getElementById('name').value
+	lobbyID = document.getElementById('lobby-id').value
+	socket.emit('joined', {username, lobbyID})
 }
 
 function start() {
-	console.log('Sending start event');
-	socket.emit('start');
+	console.log('Sending start event')
+	socket.emit('start')
 }
 
 function newGame() {
-	console.log('Sending new game event');
-	lobbyID = document.getElementById('lobby-id').value;
-	username = document.getElementById('name').value;
-	document.getElementById('new-button').style.display = 'none';
-	document.getElementById('join-button').style.display = 'none';
-	document.getElementById('start-button').style.display = '';
-	socket.emit('new', lobbyID);
+	console.log('Sending new game event')
+	lobbyID = document.getElementById('lobby-id').value
+	username = document.getElementById('name').value
+	document.getElementById('new-button').style.display = 'none'
+	document.getElementById('join-button').style.display = 'none'
+	document.getElementById('start-button').style.display = ''
+	socket.emit('new', lobbyID)
 }
 
 function appendToList(name) {
-	player = document.createElement('li');
-	player.innerHTML = name;
-	player.classList.add('player');
-	document.getElementById('playerList').appendChild(player);
+	player = document.createElement('li')
+	player.innerHTML = name
+	player.classList.add('player')
+	document.getElementById('playerList').appendChild(player)
 }
 
 function removeFromList(name) {
 	Array.from(document.getElementsByClassName('player')).forEach(player => {
 		if (player.innerHTML == name) {
-			player.remove();
+			player.remove()
 		}
-	});
+	})
 }
 
 function removeAllFromList() {
 	Array.from(document.getElementsByClassName('player')).forEach(player => {
-		player.remove();
-	});
+		player.remove()
+	})
 }
 
 function loadBoard() {
 	for (let i = 0; i < board.length; i++) {
 		if (board[i] != null) {
-			var letter = document.createElement('td');
-			var value = document.createElement('sub');
-			letter.setAttribute('id', idIndex + 1000);
-			idIndex++;
-			letter.setAttribute('class', 'letter');
-			letter.classList.add('setInStone');
-			value.innerHTML = '47';
-			letter.appendChild(value);
-			letter.innerHTML = board[i];
-			document.getElementById(i).innerHTML = '';
-			document.getElementById(i).appendChild(letter);
-			firstMove = false;
+			var letter = document.createElement('td')
+			var value = document.createElement('sub')
+			letter.setAttribute('id', idIndex + 1000)
+			idIndex++
+			letter.setAttribute('class', 'letter')
+			letter.classList.add('setInStone')
+			value.innerHTML = '47'
+			letter.appendChild(value)
+			letter.innerHTML = board[i]
+			document.getElementById(i).innerHTML = ''
+			document.getElementById(i).appendChild(letter)
+			firstMove = false
 		}
 	}
 }
@@ -208,9 +209,9 @@ function donereroll() {
 		}
 
 		rerollOn = false
-		socket.emit('done', {board, bag, lobbyID});
+		socket.emit('done', {board, bag, lobbyID})
 	} else {
-		console.log('It\'s not your turn');
+		console.log('It\'s not your turn')
 	}
 }
 
@@ -373,22 +374,22 @@ function done() {
 
 				i += 15
 			}
-			allwords.push(word);
+			allwords.push(word)
 		}
 
-		validwords = true;
+		validwords = true
 
 		for (item of allwords) {
-			console.log(item);
+			console.log(item)
 
 			if (item.length > 1 && !dictionary.includes(item)) {
-				validwords = false;
-				console.log('"' + item + '"' + ' invalid');
+				validwords = false
+				console.log('"' + item + '"' + ' invalid')
 			}
 
 			if (firstMove && changedFields.length == 1) {
-				validwords = false;
-				console.log('"' + item + '"' + ' invalid');
+				validwords = false
+				console.log('"' + item + '"' + ' invalid')
 			}
 		}
 
@@ -405,14 +406,25 @@ function done() {
 				board[item] = document.getElementById(item).childNodes[0].innerHTML.replace(/(\r\n|\n|\r)/gm, '').replace(/\s/g, '').substr(0, 1)
 			}
 
+			defDiv = document.createElement('div')
+			defDiv.id = 'definition'
+			fetch(`https://api.dictionaryapi.dev/api/v2/entries/de/${allwords[allwords.length - 1]}`)
+				.then(response => response.json())
+				.then(data => {
+					if (Array.isArray(data)) {
+						defDiv.innerHTML = data[0]['meanings'][0]['definitions'][0]['definition']
+						document.getElementsByClassName('right-container')[0].appendChild(defDiv);
+					}
+				})
+
 			draw(changedFields.length)
 			changedFields = []
 			checkvalid()
-			socket.emit('done', {board, bag, lobbyID});
+			socket.emit('done', {board, bag, lobbyID})
 			console.log('sent board')
 		}
 	} else {
-		console.log('It\'s not your turn');
+		console.log('It\'s not your turn')
 	}
 }
 
