@@ -1,7 +1,7 @@
-//TODO Letters can be dropped into existing letters
-
-const socket = io('https://scrabblenode.herokuapp.com/')
-//const socket = io('ws://localhost:8080')
+//Handle players leaving, make clients adjust their ids
+//Fix Firefox
+//const socket = io('https://scrabblenode.herokuapp.com/')
+const socket = io('ws://localhost:8080')
 
 var initBag = ['E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'E_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'N_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'S_1', 'I_1', 'I_1', 'I_1', 'I_1', 'I_1', 'I_1', 'R_1', 'R_1', 'R_1', 'R_1', 'R_1', 'R_1', 'T_1', 'T_1', 'T_1', 'T_1', 'T_1', 'T_1', 'U_1', 'U_1', 'U_1', 'U_1', 'U_1', 'U_1', 'A_1', 'A_1', 'A_1', 'A_1', 'A_1', 'D_1', 'D_1', 'D_1', 'D_1', 'H_2', 'H_2', 'H_2', 'H_2', 'M_3', 'M_3', 'M_3', 'M_3', 'G_2', 'G_2', 'G_2', 'L_2', 'L_2', 'L_2', 'O_2', 'O_2', 'O_2', 'B_3', 'B_3', 'C_4', 'C_4', 'F_4', 'F_4', 'K_4', 'K_4', 'W_3', 'Z_3', 'P_4', 'J_6', 'V_6', 'X_8', 'Q_10', 'Y_10']
 
@@ -68,6 +68,12 @@ socket.on('doneServer', (data) => {
 	board = data['board']
 	bag = data['bag']
 	loadBoard()
+	// for (player of document.getElementsByClassName('player')) {
+	// 	if (player.innerHTML == data['current']) {
+	// 		player.style.color = 'red';
+	// 	}
+	// }
+	
 	console.log('received current turn: ' + currentTurn + ' and I am: ' + userID)
 })
 
@@ -123,10 +129,17 @@ function loadBoard() {
 			letter.setAttribute('class', 'letter')
 			letter.classList.add('setInStone')
 			value.innerHTML = '47'
+			value.removeAttribute('ondrop')
+			value.removeAttribute('ondragover')
+			letter.removeAttribute('ondrop')
+			letter.removeAttribute('ondragover')
 			letter.appendChild(value)
 			letter.innerHTML = board[i]
-			document.getElementById(i).innerHTML = ''
-			document.getElementById(i).appendChild(letter)
+			cell =  document.getElementById(i)
+			cell.innerHTML = ''
+			cell.appendChild(letter)
+			cell.removeAttribute('ondrop')
+			cell.removeAttribute('ondragover')
 			firstMove = false
 		}
 	}

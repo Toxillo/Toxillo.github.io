@@ -15,61 +15,72 @@ Order of elements in games map array
 4: players
 */
 
-var gameInProg = false;
-var games = new Map();
+var games = new Map()
 
 io.on('connection', (socket) => {
-	console.log('player connected');
+	console.log('player connected')
 
     socket.on('joined', (data) => {
-        id = data['lobbyID'];
+        id = data['lobbyID']
         if (games.has(data['lobbyID'])) {
             if (!Array.from(games.get(id)[4].values()).includes(data['username'])) {
-                socket.emit('success');
-                socket.join(id);
-                gameArray = games.get(id);
-                gameArray[3] = gameArray[3] + 1;
-                gameArray[4].set(socket.id, data['username']);
-
-                players = JSON.stringify(Array.from(gameArray[4]));
-                socket.emit('info', players);
-                console.log(players);
-                socket.to(id).emit('newUser', data['username']);
+                socket.emit('success')
+                socket.join(id)
+                gameArray = games.get(id)
+                gameArray[3] = gameArray[3] + 1
+                gameArray[4].set(socket.id, data['username'])
+                players = JSON.stringify(Array.from(gameArray[4]))
+                socket.emit('info', players)
+                console.log(players)
+                socket.to(id).emit('newUser', data['username'])
             } else {
-                socket.emit('error', 'Failed to join! This username is already taken.');
+                socket.emit('error', 'Failed to join! This username is already taken.')
             }
         } else {
-            socket.emit('error', 'Failed to join! There is no lobby with the id \'' + id + '\'');
+            socket.emit('error', 'Failed to join! There is no lobby with the id \'' + id + '\'')
         }
     });
 
     socket.on('start', () => {
-        io.emit('startServer');
-        console.log('received start event');
+        io.emit('startServer')
+        console.log('received start event')
     });
 
     socket.on('new', (id) => {
-        board = new Array(255);
-        bag = initBag;
-        turn = 0;
-        playerCount = 0;
-        players = new Map();
-        games.set(id, [board, bag, turn, playerCount, players]);
-        console.log('created new game with the id: ' + id);
-        socket.join(id);
-        io.to(id).emit('newServer');
-        console.log('Server sent new game event');
+        board = new Array(255)
+        bag = initBag
+        turn = 0
+        playerCount = 0
+        players = new Map()
+        games.set(id, [board, bag, turn, playerCount, players])
+        console.log('created new game with the id: ' + id)
+        socket.join(id)
+        io.to(id).emit('newServer')
+        console.log('Server sent new game event')
     });
 
     socket.on('done', (data) => {
-    	console.log('done event received');
-        console.log('turn ' + games.get(data['lobbyID'])[2] + ' and players ' + games.get(data['lobbyID'])[3]);
-    	turn = (games.get(data['lobbyID'])[2] + 1) % games.get(data['lobbyID'])[3];
-        io.to(data['lobbyID']).emit('doneServer', {turn: (turn + 1), board: data['board'], bag: data['bag']});
-        games.get(data['lobbyID'])[2] = turn;
+    	console.log('done event received')
+        console.log('turn ' + games.get(data['lobbyID'])[2] + ' and players ' + games.get(data['lobbyID'])[3])
+        turn = (games.get(data['lobbyID'])[2] + 1) % games.get(data['lobbyID'])[3]
+        io.to(data['lobbyID']).emit('doneServer', {turn: (turn + 1), board: data['board'], bag: data['bag']})
+        games.get(data['lobbyID'])[2] = turn
     });
 
     socket.on('disconnect', () => {
+        for (var value of games.values()) {
+            if (value[4].has(socket.id)) {
+                if (value[3] == 1) {
+                    games.delete(value)
+                } else {
+                    io.emit('userLeft', )
+                    value[4].delete(socket.id)
+                    value[3] -= 1
+                }
+                break
+            }
+        }
+
     })
 
 });
