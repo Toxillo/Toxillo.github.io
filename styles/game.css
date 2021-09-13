@@ -1,0 +1,6 @@
+g.q:hover{
+    opacity: 1;
+    fill-opacity: 0;
+    fill: none;
+    stroke-width: 3px !important;
+}
